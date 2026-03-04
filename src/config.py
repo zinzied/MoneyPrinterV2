@@ -1,11 +1,34 @@
 import os
 import sys
 import json
-import srt_equalizer
 
 from termcolor import colored
 
 ROOT_DIR = os.path.dirname(sys.path[0])
+
+
+def _assert_supported_python_version() -> None:
+    """
+    Ensure the runtime meets the project's minimum supported Python version.
+    """
+    major, minor = sys.version_info[:2]
+    if (major, minor) < (3, 12):
+        raise RuntimeError(
+            f"MoneyPrinterV2 requires Python 3.12 or newer. "
+            f"Detected {major}.{minor}. "
+            "Upgrade your Python interpreter and reinstall requirements."
+        )
+
+
+_assert_supported_python_version()
+
+try:
+    import srt_equalizer
+except ModuleNotFoundError as exc:
+    raise ModuleNotFoundError(
+        "Missing dependency 'srt_equalizer'. "
+        "Install requirements with: pip install -r requirements.txt"
+    ) from exc
 
 def assert_folder_structure() -> None:
     """

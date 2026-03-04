@@ -8,7 +8,7 @@ from status import *
 from config import *
 
 DEFAULT_SONG_ARCHIVE_URLS = [
-    "https://filebin.net/bb9ewdtckolsf3sg/drive-download-20240209T180019Z-001.zip"
+    # Keep empty by default; user can set a working archive URL in config.json -> zip_url.
 ]
 
 
@@ -113,9 +113,11 @@ def fetch_songs() -> None:
                 warning(f"Failed to fetch songs from {download_url}: {err}")
 
         if not downloaded:
-            raise RuntimeError(
-                "Could not download a valid songs archive from any configured URL"
+            warning(
+                "No valid songs archive found. Continuing without background music. "
+                "Set 'zip_url' in config.json to a valid .zip to enable auto-download."
             )
+            return
 
         # Remove the zip file
         if os.path.exists(archive_path):
@@ -124,7 +126,10 @@ def fetch_songs() -> None:
         success(" => Downloaded Songs to ../Songs.")
 
     except Exception as e:
-        error(f"Error occurred while fetching songs: {str(e)}")
+        warning(
+            f"Song download failed: {str(e)}. "
+            "Continuing without background music."
+        )
 
 
 def choose_random_song() -> str:

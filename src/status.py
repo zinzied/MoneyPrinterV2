@@ -1,18 +1,20 @@
 from termcolor import colored
 
+
 def error(message: str, show_emoji: bool = True) -> None:
     """
     Prints an error message.
 
     Args:
         message (str): The error message
-        show_emoji (bool): Whether to show the emoji
+        show_emoji (bool): Whether to show the marker
 
     Returns:
         None
     """
-    emoji = "❌" if show_emoji else ""
-    print(colored(f"{emoji} {message}", "red"))
+    marker = "[X]" if show_emoji else ""
+    print(colored(f"{marker} {message}", "red"))
+
 
 def success(message: str, show_emoji: bool = True) -> None:
     """
@@ -20,13 +22,14 @@ def success(message: str, show_emoji: bool = True) -> None:
 
     Args:
         message (str): The success message
-        show_emoji (bool): Whether to show the emoji
+        show_emoji (bool): Whether to show the marker
 
     Returns:
         None
     """
-    emoji = "✅" if show_emoji else ""
-    print(colored(f"{emoji} {message}", "green"))
+    marker = "[OK]" if show_emoji else ""
+    print(colored(f"{marker} {message}", "green"))
+
 
 def info(message: str, show_emoji: bool = True) -> None:
     """
@@ -34,13 +37,14 @@ def info(message: str, show_emoji: bool = True) -> None:
 
     Args:
         message (str): The info message
-        show_emoji (bool): Whether to show the emoji
+        show_emoji (bool): Whether to show the marker
 
     Returns:
         None
     """
-    emoji = "ℹ️" if show_emoji else ""
-    print(colored(f"{emoji} {message}", "magenta"))
+    marker = "[i]" if show_emoji else ""
+    print(colored(f"{marker} {message}", "magenta"))
+
 
 def warning(message: str, show_emoji: bool = True) -> None:
     """
@@ -48,13 +52,14 @@ def warning(message: str, show_emoji: bool = True) -> None:
 
     Args:
         message (str): The warning message
-        show_emoji (bool): Whether to show the emoji
+        show_emoji (bool): Whether to show the marker
 
     Returns:
         None
     """
-    emoji = "⚠️" if show_emoji else ""
-    print(colored(f"{emoji} {message}", "yellow"))
+    marker = "[!]" if show_emoji else ""
+    print(colored(f"{marker} {message}", "yellow"))
+
 
 def question(message: str, show_emoji: bool = True) -> str:
     """
@@ -62,10 +67,10 @@ def question(message: str, show_emoji: bool = True) -> str:
 
     Args:
         message (str): The question message
-        show_emoji (bool): Whether to show the emoji
+        show_emoji (bool): Whether to show the marker
 
     Returns:
         user_input (str): The user's input
     """
-    emoji = "❓" if show_emoji else ""
-    return input(colored(f"{emoji} {message}", "magenta"))
+    marker = "[?]" if show_emoji else ""
+    return input(colored(f"{marker} {message}", "magenta"))

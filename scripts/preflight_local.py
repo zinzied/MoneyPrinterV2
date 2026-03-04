@@ -4,8 +4,6 @@ import os
 import sys
 from typing import Tuple
 
-import requests
-
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_PATH = os.path.join(ROOT_DIR, "config.json")
@@ -23,15 +21,33 @@ def fail(msg: str) -> None:
     print(f"[FAIL] {msg}")
 
 
-def check_url(url: str, timeout: int = 3) -> Tuple[bool, str]:
+def check_url(requests_module, url: str, timeout: int = 3) -> Tuple[bool, str]:
     try:
-        response = requests.get(url, timeout=timeout)
+        response = requests_module.get(url, timeout=timeout)
         return True, f"HTTP {response.status_code}"
     except Exception as exc:
         return False, str(exc)
 
 
 def main() -> int:
+    major, minor = sys.version_info[:2]
+    if (major, minor) < (3, 12):
+        fail(
+            f"Unsupported Python {major}.{minor}. "
+            "MoneyPrinterV2 requires Python 3.12 or newer."
+        )
+        return 1
+    ok(f"python_version={major}.{minor}")
+
+    try:
+        import requests
+    except Exception as exc:
+        fail(
+            f"requests is not importable: {exc}. "
+            "Install dependencies with: pip install -r requirements.txt"
+        )
+        return 1
+
     if not os.path.exists(CONFIG_PATH):
         fail(f"Missing config file: {CONFIG_PATH}")
         return 1
@@ -65,7 +81,7 @@ def main() -> int:
 
     # Ollama (LLM)
     base = str(cfg.get("ollama_base_url", "http://127.0.0.1:11434")).rstrip("/")
-    reachable, detail = check_url(f"{base}/api/tags")
+    reachable, detail = check_url(requests, f"{base}/api/tags")
     if not reachable:
         fail(f"Ollama is not reachable at {base}: {detail}")
         failures += 1
@@ -95,7 +111,7 @@ def main() -> int:
         fail("nanobanana2_api_key is empty (and GEMINI_API_KEY is not set)")
         failures += 1
 
-    reachable, detail = check_url(nb2_base, timeout=8)
+    reachable, detail = check_url(requests, nb2_base, timeout=8)
     if not reachable:
         warn(f"Nano Banana 2 base URL could not be reached: {detail}")
     else:

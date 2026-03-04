@@ -1,15 +1,18 @@
 wheel
 termcolor
 schedule
-kittentts @ https://github.com/KittenML/KittenTTS/releases/download/0.8.1/kittentts-0.8.1-py3-none-any.whl
+kittentts @ https://github.com/KittenML/KittenTTS/releases/download/0.8.1/kittentts-0.8.1-py3-none-any.whl ; python_version < "3.13"
+gTTS
 soundfile
 prettytable
+requests
 webdriver_manager
 selenium_firefox
-selenium
+selenium<4.10
 ollama
-moviepy
-Pillow==9.5.0
+moviepy<2
+Pillow==9.5.0 ; python_version < "3.13"
+Pillow>=10 ; python_version >= "3.13"
 yagmail
 assemblyai
 faster-whisper
