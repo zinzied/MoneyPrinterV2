@@ -11,14 +11,13 @@ from llm_provider import generate_text
 from typing import List, Optional
 from datetime import datetime
 from termcolor import colored
-from selenium_firefox import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
-from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from .webdriver_support import build_firefox_service, prepare_firefox_profile
 
 
 class Twitter:
@@ -52,17 +51,15 @@ class Twitter:
         if get_headless():
             self.options.add_argument("--headless")
 
-        if not os.path.isdir(fp_profile_path):
-            raise ValueError(
-                f"Firefox profile path does not exist or is not a directory: {fp_profile_path}"
-            )
-
+        self._selenium_profile_path = prepare_firefox_profile(
+            fp_profile_path, ROOT_DIR
+        )
         # Set the profile path
         self.options.add_argument("-profile")
-        self.options.add_argument(fp_profile_path)
+        self.options.add_argument(self._selenium_profile_path)
 
         # Set the service
-        self.service: Service = Service(GeckoDriverManager().install())
+        self.service: Service = build_firefox_service()
 
         # Initialize the browser
         self.browser: webdriver.Firefox = webdriver.Firefox(

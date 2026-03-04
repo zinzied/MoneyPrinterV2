@@ -17,7 +17,6 @@ from constants import *
 from typing import List
 from moviepy.editor import *
 from termcolor import colored
-from selenium_firefox import *
 from selenium import webdriver
 from moviepy.video.fx.all import crop
 from moviepy.config import change_settings
@@ -25,8 +24,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from moviepy.video.tools.subtitles import SubtitlesClip
-from webdriver_manager.firefox import GeckoDriverManager
 from datetime import datetime
+from .webdriver_support import build_firefox_service, prepare_firefox_profile
 
 # Set ImageMagick Path
 change_settings({"IMAGEMAGICK_BINARY": get_imagemagick_path()})
@@ -83,16 +82,14 @@ class YouTube:
         if get_headless():
             self.options.add_argument("--headless")
 
-        if not os.path.isdir(self._fp_profile_path):
-            raise ValueError(
-                f"Firefox profile path does not exist or is not a directory: {self._fp_profile_path}"
-            )
-
+        self._selenium_profile_path = prepare_firefox_profile(
+            self._fp_profile_path, ROOT_DIR
+        )
         self.options.add_argument("-profile")
-        self.options.add_argument(self._fp_profile_path)
+        self.options.add_argument(self._selenium_profile_path)
 
         # Set the service
-        self.service: Service = Service(GeckoDriverManager().install())
+        self.service: Service = build_firefox_service()
 
         # Initialize the browser
         self.browser: webdriver.Firefox = webdriver.Firefox(

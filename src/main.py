@@ -17,6 +17,62 @@ from classes.Outreach import Outreach
 from classes.AFM import AffiliateMarketing
 from llm_provider import list_models, select_model, get_active_model
 
+
+def ensure_llm_model_selected() -> bool:
+    """
+    Ensure an Ollama model is selected before running LLM-powered features.
+
+    Returns:
+        bool: True if a model is selected, False otherwise.
+    """
+    active = get_active_model()
+    if active:
+        return True
+
+    configured_model = get_ollama_model()
+    if configured_model:
+        select_model(configured_model)
+        success(f"Using configured model: {configured_model}")
+        return True
+
+    try:
+        models = list_models()
+    except Exception as e:
+        warning(
+            f"Could not connect to Ollama: {e}. "
+            "Start Ollama and pull a model (e.g. 'ollama pull llama3.2:3b')."
+        )
+        return False
+
+    if not models:
+        warning(
+            "No Ollama models available. Pull one first "
+            "(e.g. 'ollama pull llama3.2:3b')."
+        )
+        return False
+
+    info("\n========== OLLAMA MODELS =========", False)
+    for idx, model_name in enumerate(models):
+        print(colored(f" {idx + 1}. {model_name}", "cyan"))
+    info("==================================\n", False)
+
+    model_choice = None
+    while model_choice is None:
+        raw = input(colored("Select a model: ", "magenta")).strip()
+        try:
+            choice_idx = int(raw) - 1
+            if 0 <= choice_idx < len(models):
+                model_choice = models[choice_idx]
+            else:
+                warning("Invalid selection. Try again.")
+        except ValueError:
+            warning("Please enter a number.")
+
+    select_model(model_choice)
+    success(f"Using model: {model_choice}")
+    return True
+
+
 def main():
     """Main entry point for the application, providing a menu-driven interface
     to manage YouTube, Twitter bots, Affiliate Marketing, and Outreach tasks.
@@ -138,13 +194,17 @@ def main():
                 error("Invalid account selected. Please try again.", "red")
                 main()
             else:
-                youtube = YouTube(
-                    selected_account["id"],
-                    selected_account["nickname"],
-                    selected_account["firefox_profile"],
-                    selected_account["niche"],
-                    selected_account["language"]
-                )
+                try:
+                    youtube = YouTube(
+                        selected_account["id"],
+                        selected_account["nickname"],
+                        selected_account["firefox_profile"],
+                        selected_account["niche"],
+                        selected_account["language"]
+                    )
+                except Exception as e:
+                    error(f"Could not initialize YouTube automation: {e}")
+                    return
 
                 while True:
                     rem_temp_files()
@@ -160,6 +220,9 @@ def main():
                     tts = TTS()
 
                     if user_input == 1:
+                        if not ensure_llm_model_selected():
+                            warning("Skipping generation until an Ollama model is selected.")
+                            continue
                         youtube.generate_video(tts)
                         upload_to_yt = question("Do you want to upload this video to YouTube? (Yes/No): ")
                         if upload_to_yt.lower() == "yes":
@@ -281,7 +344,16 @@ def main():
                 error("Invalid account selected. Please try again.", "red")
                 main()
             else:
-                twitter = Twitter(selected_account["id"], selected_account["nickname"], selected_account["firefox_profile"], selected_account["topic"])
+                try:
+                    twitter = Twitter(
+                        selected_account["id"],
+                        selected_account["nickname"],
+                        selected_account["firefox_profile"],
+                        selected_account["topic"],
+                    )
+                except Exception as e:
+                    error(f"Could not initialize Twitter automation: {e}")
+                    return
 
                 while True:
                     
@@ -296,6 +368,9 @@ def main():
                     user_input = int(question("Select an option: "))
 
                     if user_input == 1:
+                        if not ensure_llm_model_selected():
+                            warning("Skipping post generation until an Ollama model is selected.")
+                            continue
                         twitter.post()
                     elif user_input == 2:
                         posts = twitter.get_posts()
@@ -406,8 +481,21 @@ def main():
                     if acc["id"] == selected_product["twitter_uuid"]:
                         account = acc
 
-                afm = AffiliateMarketing(selected_product["affiliate_link"], account["firefox_profile"], account["id"], account["nickname"], account["topic"])
+                try:
+                    afm = AffiliateMarketing(
+                        selected_product["affiliate_link"],
+                        account["firefox_profile"],
+                        account["id"],
+                        account["nickname"],
+                        account["topic"],
+                    )
+                except Exception as e:
+                    error(f"Could not initialize Affiliate Marketing: {e}")
+                    return
 
+                if not ensure_llm_model_selected():
+                    warning("Skipping pitch generation until an Ollama model is selected.")
+                    return
                 afm.generate_pitch()
                 afm.share_pitch("twitter")
 

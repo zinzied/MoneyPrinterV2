@@ -60,8 +60,27 @@ def rem_temp_files() -> None:
     files = os.listdir(mp_dir)
 
     for file in files:
-        if not file.endswith(".json"):
-            os.remove(os.path.join(mp_dir, file))
+        path = os.path.join(mp_dir, file)
+
+        # Keep persisted cache files.
+        if file.endswith(".json"):
+            continue
+
+        # Preserve webdriver profile cache directory.
+        if os.path.isdir(path):
+            if file == "firefox_profiles":
+                continue
+            try:
+                import shutil
+                shutil.rmtree(path)
+            except Exception as e:
+                warning(f"Could not remove temp directory '{path}': {e}")
+            continue
+
+        try:
+            os.remove(path)
+        except Exception as e:
+            warning(f"Could not remove temp file '{path}': {e}")
 
 
 def fetch_songs() -> None:
